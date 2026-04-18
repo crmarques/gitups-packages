@@ -1,0 +1,23 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: olm
+spec:
+  renderer: olm
+  inputs:
+    - name: namespace
+      type: string
+      default: keycloak
+    - name: olm.startingCSV
+      type: string
+      default: keycloak-operator.v26.5.0
+  dependsOn:
+    - olm/install
+  olm:
+    package: keycloak-operator
+    channel: fast
+    source: operatorhubio-catalog
+    sourceNamespace: olm
+    startingCSV: keycloak-operator.v26.5.0
+    installPlanApproval: Automatic
+    operatorGroupScope: OwnNamespace

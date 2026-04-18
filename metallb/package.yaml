@@ -1,0 +1,12 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDefinition
+metadata:
+  name: metallb
+  version: 0.0.1
+spec:
+  role: workload
+  category: network-lb
+  defaultInstall: olm
+  defaultResources:
+    - template: config
+      name: default

@@ -1,0 +1,19 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: applications
+spec:
+  renderer: raw
+  inputs:
+    - name: namespace
+      type: string
+      default: argocd
+    - name: repoURL
+      type: string
+      placeholder: true
+      placeholderReason: "base repo URL the Argo CD App-of-Apps will target"
+    - name: targetRevision
+      type: string
+      default: HEAD
+  dependsOn:
+    - argocd/resources/instance

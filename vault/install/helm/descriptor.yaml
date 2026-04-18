@@ -1,0 +1,41 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: helm
+spec:
+  renderer: helm
+  inputs:
+    - name: namespace
+      type: string
+      default: vault
+    - name: chart.version
+      type: string
+      default: 0.32.0
+    - name: appVersion
+      type: string
+      default: 1.21.2
+    - name: server.dev.enabled
+      type: bool
+      default: true
+    - name: server.dev.devRootToken
+      type: string
+      sensitive: true
+      placeholder: true
+      placeholderReason: "Vault dev root token for the e2e bootstrap install"
+    - name: ui.enabled
+      type: bool
+      default: true
+    - name: server.ha.enabled
+      type: bool
+      default: false
+    - name: server.standalone.enabled
+      type: bool
+      default: false
+    - name: injector.enabled
+      type: bool
+      default: false
+  helm:
+    repo: https://helm.releases.hashicorp.com
+    chart: vault
+    version: 0.32.0
+    valuesTemplate: values.yaml.tmpl

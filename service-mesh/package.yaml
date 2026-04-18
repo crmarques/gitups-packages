@@ -1,0 +1,14 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDefinition
+metadata:
+  name: service-mesh
+  version: 0.0.1
+spec:
+  role: workload
+  category: mesh
+  defaultInstall: helm
+  defaultResources:
+    - template: istiod
+      name: default
+    - template: config
+      name: default

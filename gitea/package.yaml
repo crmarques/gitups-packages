@@ -1,0 +1,12 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDefinition
+metadata:
+  name: gitea
+  version: 0.0.1
+spec:
+  role: workload
+  category: source-control
+  defaultInstall: helm
+  defaultResources:
+    - template: config
+      name: default

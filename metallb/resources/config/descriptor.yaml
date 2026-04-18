@@ -1,0 +1,19 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: config
+spec:
+  renderer: raw
+  inputs:
+    - name: namespace
+      type: string
+      default: metallb-system
+    - name: addressPools
+      type: list
+      default:
+        - name: default
+          cidrs:
+            - __GITUPS_PLACEHOLDER__
+      placeholderReason: "LB CIDR range is site-specific (e.g. 192.168.10.240-192.168.10.250)"
+  dependsOn:
+    - metallb/install

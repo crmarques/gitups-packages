@@ -1,0 +1,12 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: config
+spec:
+  renderer: raw
+  inputs:
+    - name: namespace
+      type: string
+      default: vault
+  dependsOn:
+    - vault/install

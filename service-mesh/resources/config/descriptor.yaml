@@ -1,0 +1,15 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: config
+spec:
+  renderer: raw
+  inputs:
+    - name: namespace
+      type: string
+      default: istio-system
+    - name: meshID
+      type: string
+      default: mesh-default
+  dependsOn:
+    - service-mesh/install

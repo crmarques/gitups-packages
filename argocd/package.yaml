@@ -1,0 +1,14 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDefinition
+metadata:
+  name: argocd
+  version: 0.0.1
+spec:
+  role: controller
+  category: gitops-controller
+  defaultInstall: olm
+  defaultResources:
+    - template: instance
+      name: default
+    - template: applications
+      name: root

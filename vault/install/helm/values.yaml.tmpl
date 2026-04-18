@@ -1,0 +1,12 @@
+injector:
+  enabled: {{ .Values.injector.enabled }}
+ui:
+  enabled: {{ .Values.ui.enabled }}
+server:
+  dev:
+    enabled: {{ .Values.server.dev.enabled }}
+    devRootToken: {{ .Values.server.dev.devRootToken }}
+  ha:
+    enabled: {{ .Values.server.ha.enabled }}
+  standalone:
+    enabled: {{ .Values.server.standalone.enabled }}

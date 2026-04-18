@@ -1,0 +1,193 @@
+name: Publish packages
+
+on:
+  pull_request:
+    paths:
+      - "*/**"
+      - ".github/workflows/publish-packages.yaml"
+  push:
+    branches:
+      - main
+    paths:
+      - "*/**"
+      - ".github/workflows/publish-packages.yaml"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  packages:
+    name: Validate and publish changed packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Detect package changes
+        id: detect
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          python3 <<'PY'
+          import os
+          import pathlib
+          import re
+          import subprocess
+          import sys
+
+          root = pathlib.Path.cwd()
+          base = os.environ.get("BASE_SHA", "")
+          head = os.environ.get("HEAD_SHA", "HEAD")
+          if not base or re.fullmatch(r"0+", base):
+              base = subprocess.check_output(
+                  ["git", "rev-list", "--max-parents=0", head],
+                  text=True,
+              ).splitlines()[0]
+
+          def git(*args, check=True):
+              return subprocess.run(
+                  ["git", *args],
+                  text=True,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.PIPE,
+                  check=check,
+              )
+
+          if os.environ.get("EVENT_NAME") == "pull_request":
+              base = git("merge-base", base, head).stdout.strip()
+
+          diff = git("diff", "--name-only", base, head).stdout.splitlines()
+          package_dirs = sorted({
+              path.split("/", 1)[0]
+              for path in diff
+              if "/" in path and (root / path.split("/", 1)[0] / "package.yaml").exists()
+          })
+
+          def read_at(ref, path):
+              result = git("show", f"{ref}:{path}", check=False)
+              if result.returncode != 0:
+                  return None
+              return result.stdout
+
+          def metadata_value(text, key):
+              in_metadata = False
+              for raw in text.splitlines():
+                  line = raw.rstrip()
+                  if re.match(r"^[^\s].*:", line):
+                      in_metadata = line == "metadata:"
+                      continue
+                  if not in_metadata:
+                      continue
+                  match = re.match(rf"^  {re.escape(key)}:\s*(.+?)\s*$", line)
+                  if match:
+                      return match.group(1).strip("'\"")
+              return ""
+
+          tag_safe = re.compile(r"^[A-Za-z0-9_.-]+$")
+          builds = []
+          violations = []
+
+          for package_dir in package_dirs:
+              package_yaml = pathlib.Path(package_dir) / "package.yaml"
+              current = package_yaml.read_text()
+              previous = read_at(base, str(package_yaml))
+              name = metadata_value(current, "name")
+              version = metadata_value(current, "version")
+              previous_version = metadata_value(previous, "version") if previous else ""
+
+              if name != package_dir:
+                  violations.append(f"{package_dir}: metadata.name {name!r} must match directory name")
+              if not version:
+                  violations.append(f"{package_dir}: metadata.version is required")
+              elif not tag_safe.fullmatch(version):
+                  violations.append(f"{package_dir}: metadata.version {version!r} is not OCI-tag safe")
+              artifact = f"{name}-{version}"
+              if name and version and (not tag_safe.fullmatch(artifact) or len(artifact) > 128):
+                  violations.append(f"{package_dir}: OCI tag {artifact!r} must match [A-Za-z0-9_.-]+ and be 128 chars or fewer")
+
+              if previous is not None and version == previous_version:
+                  print(f"skip publish for {package_dir}: metadata.version remains {version!r}")
+                  continue
+
+              if name and version and tag_safe.fullmatch(artifact) and len(artifact) <= 128:
+                  builds.append((package_dir, name, version))
+
+          if violations:
+              print("Package version validation failed:", file=sys.stderr)
+              for violation in violations:
+                  print(f"  - {violation}", file=sys.stderr)
+              sys.exit(1)
+
+          output = pathlib.Path(os.environ["GITHUB_OUTPUT"])
+          output.write_text(
+              f"publish_count={len(builds)}\n"
+              f"changed_count={len(package_dirs)}\n"
+          )
+
+          build_file = root / ".package-builds"
+          with build_file.open("w") as handle:
+              for package_dir, name, version in builds:
+                  handle.write(f"{package_dir}\t{name}\t{version}\n")
+
+          if builds:
+              for package_dir, name, version in builds:
+                  print(f"will publish {package_dir} as {name}-{version}")
+          else:
+              print("no package artifacts to publish")
+          PY
+
+      - name: Set up ORAS
+        if: github.event_name == 'push' && steps.detect.outputs.publish_count != '0'
+        uses: oras-project/setup-oras@v1
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push' && steps.detect.outputs.publish_count != '0'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${GITHUB_TOKEN}" | oras login ghcr.io \
+            --username "${GITHUB_ACTOR}" \
+            --password-stdin
+
+      - name: Package and publish OCI artifacts
+        if: github.event_name == 'push' && steps.detect.outputs.publish_count != '0'
+        env:
+          OCI_REPOSITORY: ghcr.io/${{ github.repository_owner }}/gitups-packages
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          oci_repository="$(printf '%s' "${OCI_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
+
+          while IFS=$'\t' read -r package_dir package_name package_version; do
+            artifact="${package_name}-${package_version}"
+            tarball="dist/${artifact}.tar.gz"
+            ref="${oci_repository}:${artifact}"
+
+            if oras manifest fetch "${ref}" >/dev/null 2>&1; then
+              echo "::error title=Package version already exists::${ref} already exists; bump metadata.version before publishing"
+              exit 1
+            fi
+
+            tar \
+              --sort=name \
+              --mtime='UTC 1970-01-01' \
+              --owner=0 \
+              --group=0 \
+              --numeric-owner \
+              -cf - "${package_dir}" | gzip -n > "${tarball}"
+
+            oras push \
+              --artifact-type application/vnd.gitups.package.v1 \
+              --annotation "org.opencontainers.image.title=${package_name}" \
+              --annotation "org.opencontainers.image.version=${package_version}" \
+              --annotation "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+              --annotation "org.opencontainers.image.revision=${GITHUB_SHA}" \
+              "${ref}" \
+              "${tarball}:application/vnd.gitups.package.layer.v1.tar+gzip"
+          done < .package-builds

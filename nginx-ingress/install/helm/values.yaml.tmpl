@@ -1,0 +1,6 @@
+controller:
+  service:
+    type: {{ .Values.controller.service.type }}
+  ingressClassResource:
+    name: {{ .Values.controller.ingressClassResource.name }}
+    default: {{ .Values.controller.ingressClassResource.default }}

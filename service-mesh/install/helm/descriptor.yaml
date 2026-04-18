@@ -1,0 +1,21 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: helm
+spec:
+  renderer: helm
+  inputs:
+    - name: namespace
+      type: string
+      default: istio-system
+    - name: chart.version
+      type: string
+      default: 1.29.2
+    - name: appVersion
+      type: string
+      default: 1.29.2
+  helm:
+    repo: https://istio-release.storage.googleapis.com/charts
+    chart: base
+    version: 1.29.2
+    valuesTemplate: values.yaml.tmpl

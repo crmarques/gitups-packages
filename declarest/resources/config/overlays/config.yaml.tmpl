@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: declarest-bootstrap
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: declarest
+    app.kubernetes.io/part-of: gitops-controllers
+data:
+  config.yaml: |
+    apiVersion: declarest.dev/v1alpha1
+    kind: Bootstrap
+    metadata:
+      name: {{ .Env }}
+    spec:
+      repoURL: {{ .Values.repoURL }}
+      targetRevision: {{ .Values.targetRevision }}
+

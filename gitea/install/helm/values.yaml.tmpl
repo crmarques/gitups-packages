@@ -1,0 +1,18 @@
+image:
+  rootless: true
+persistence:
+  enabled: {{ .Values.persistence.enabled }}
+postgresql:
+  enabled: {{ .Values.postgresql.enabled }}
+postgresql-ha:
+  enabled: {{ index .Values "postgresql-ha" "enabled" }}
+redis-cluster:
+  enabled: {{ index .Values "redis-cluster" "enabled" }}
+gitea:
+  config:
+    database:
+      DB_TYPE: sqlite3
+    repository:
+      DEFAULT_BRANCH: main
+    server:
+      ROOT_URL: {{ .Values.rootURL }}

@@ -1,0 +1,12 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDefinition
+metadata:
+  name: vault
+  version: 0.0.1
+spec:
+  role: workload
+  category: secrets
+  defaultInstall: helm
+  defaultResources:
+    - template: config
+      name: default

@@ -1,0 +1,33 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: helm
+spec:
+  renderer: helm
+  inputs:
+    - name: namespace
+      type: string
+      default: ingress-nginx
+    - name: chart.version
+      type: string
+      default: 4.15.1
+    - name: appVersion
+      type: string
+      default: 1.15.1
+    - name: controller.service.type
+      type: string
+      default: LoadBalancer
+      enum: [ClusterIP, LoadBalancer, NodePort]
+    - name: controller.ingressClassResource.name
+      type: string
+      default: nginx
+    - name: controller.ingressClassResource.default
+      type: bool
+      default: true
+  dependsOn:
+    - metallb/install
+  helm:
+    repo: https://kubernetes.github.io/ingress-nginx
+    chart: ingress-nginx
+    version: 4.15.1
+    valuesTemplate: values.yaml.tmpl

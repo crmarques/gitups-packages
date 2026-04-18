@@ -1,0 +1,36 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: helm
+spec:
+  renderer: helm
+  inputs:
+    - name: namespace
+      type: string
+      default: gitea
+    - name: chart.version
+      type: string
+      default: 12.5.3
+    - name: appVersion
+      type: string
+      default: 1.25.5
+    - name: rootURL
+      type: string
+      default: http://gitea.gitea.svc.cluster.local:3000/
+    - name: persistence.enabled
+      type: bool
+      default: false
+    - name: postgresql.enabled
+      type: bool
+      default: false
+    - name: postgresql-ha.enabled
+      type: bool
+      default: false
+    - name: redis-cluster.enabled
+      type: bool
+      default: false
+  helm:
+    repo: https://dl.gitea.com/charts/
+    chart: gitea
+    version: 12.5.3
+    valuesTemplate: values.yaml.tmpl
