@@ -10,3 +10,14 @@ spec:
   defaultResources:
     - template: config
       name: default
+  provides:
+    - capability: git-provider
+      resourceTemplate: user
+      exports:
+        - name: url
+          from: input:rootURL
+        - name: username
+          from: binding:username
+        - name: token
+          from: placeholder
+          secret: true

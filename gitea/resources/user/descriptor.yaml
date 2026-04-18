@@ -1,0 +1,29 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: user
+spec:
+  renderer: raw
+  provisioningStyle: script
+  scriptImage: alpine:3.20.3
+  inputs:
+    - name: namespace
+      type: string
+      default: gitea
+    - name: url
+      type: string
+      required: true
+    - name: username
+      type: string
+      required: true
+    - name: token
+      type: string
+      required: true
+      sensitive: true
+  dependsOn:
+    - gitea/install
+  readiness:
+    - kind: Deployment
+      namespace: '{{ .Values.namespace }}'
+      name: gitea
+      condition: Available
