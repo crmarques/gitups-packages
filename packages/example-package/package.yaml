@@ -1,0 +1,13 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDefinition
+metadata:
+  name: example-package
+  version: 0.1.0
+  description: Minimal example — the canonical shape of a gitups package.
+spec:
+  role: workload
+  category: example
+  defaultInstall: raw
+  defaultResources:
+    - template: config
+      name: default

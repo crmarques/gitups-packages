@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: another-example-debug
+  namespace: another-example
+data:
+  note: |
+    This overlay is intentionally excluded from the release tarball via
+    spec.package.exclude in package.yaml. It exists solely to demonstrate
+    the exclude pattern in action.

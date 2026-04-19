@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: another-example
+  namespace: another-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: another-example
+  template:
+    metadata:
+      labels:
+        app: another-example
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/gitups/another-example:0.1.0@sha256:0000000000000000000000000000000000000000000000000000000000000000
+          ports:
+            - containerPort: 8080

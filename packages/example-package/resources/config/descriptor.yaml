@@ -1,0 +1,15 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: config
+spec:
+  renderer: raw
+  inputs:
+    - name: message
+      type: string
+      default: "Hello, gitups!"
+    - name: namespace
+      type: string
+      default: example
+  dependsOn:
+    - example-package/install

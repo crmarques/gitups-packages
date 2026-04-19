@@ -1,0 +1,152 @@
+{
+  "apiVersion": "gitups-packages.io/v1alpha1",
+  "kind": "PackageIndex",
+  "latest": {
+    "another-example": {
+      "oci": "ghcr.io/crmarques/gitups-packages/another-example:0.1.0",
+      "version": "0.1.0"
+    },
+    "argocd": {
+      "oci": "ghcr.io/crmarques/gitups-packages/argocd:0.0.1",
+      "version": "0.0.1"
+    },
+    "declarest": {
+      "oci": "ghcr.io/crmarques/gitups-packages/declarest:0.1.0",
+      "version": "0.1.0"
+    },
+    "example-package": {
+      "oci": "ghcr.io/crmarques/gitups-packages/example-package:0.1.0",
+      "version": "0.1.0"
+    },
+    "gitea": {
+      "oci": "ghcr.io/crmarques/gitups-packages/gitea:0.0.1",
+      "version": "0.0.1"
+    },
+    "haproxy": {
+      "oci": "ghcr.io/crmarques/gitups-packages/haproxy:0.1.0",
+      "version": "0.1.0"
+    },
+    "keycloak": {
+      "oci": "ghcr.io/crmarques/gitups-packages/keycloak:0.0.1",
+      "version": "0.0.1"
+    },
+    "metallb": {
+      "oci": "ghcr.io/crmarques/gitups-packages/metallb:0.0.1",
+      "version": "0.0.1"
+    },
+    "nginx-ingress": {
+      "oci": "ghcr.io/crmarques/gitups-packages/nginx-ingress:0.0.1",
+      "version": "0.0.1"
+    },
+    "olm": {
+      "oci": "ghcr.io/crmarques/gitups-packages/olm:0.0.1",
+      "version": "0.0.1"
+    },
+    "service-mesh": {
+      "oci": "ghcr.io/crmarques/gitups-packages/service-mesh:0.0.1",
+      "version": "0.0.1"
+    },
+    "vault": {
+      "oci": "ghcr.io/crmarques/gitups-packages/vault:0.0.1",
+      "version": "0.0.1"
+    }
+  },
+  "packages": [
+    {
+      "category": "example",
+      "description": "Example package demonstrating spec.package include/exclude overrides.",
+      "name": "another-example",
+      "oci": "ghcr.io/crmarques/gitups-packages/another-example:0.1.0",
+      "role": "workload",
+      "version": "0.1.0"
+    },
+    {
+      "category": "gitops-controller",
+      "description": "",
+      "name": "argocd",
+      "oci": "ghcr.io/crmarques/gitups-packages/argocd:0.0.1",
+      "role": "kubernetes-resource-controller",
+      "version": "0.0.1"
+    },
+    {
+      "category": "gitops-controller",
+      "description": "",
+      "name": "declarest",
+      "oci": "ghcr.io/crmarques/gitups-packages/declarest:0.1.0",
+      "role": "service-resource-controller",
+      "version": "0.1.0"
+    },
+    {
+      "category": "example",
+      "description": "Minimal example \u2014 the canonical shape of a gitups package.",
+      "name": "example-package",
+      "oci": "ghcr.io/crmarques/gitups-packages/example-package:0.1.0",
+      "role": "workload",
+      "version": "0.1.0"
+    },
+    {
+      "category": "source-control",
+      "description": "",
+      "name": "gitea",
+      "oci": "ghcr.io/crmarques/gitups-packages/gitea:0.0.1",
+      "role": "workload",
+      "version": "0.0.1"
+    },
+    {
+      "category": "ingress",
+      "description": "",
+      "name": "haproxy",
+      "oci": "ghcr.io/crmarques/gitups-packages/haproxy:0.1.0",
+      "role": "workload",
+      "version": "0.1.0"
+    },
+    {
+      "category": "identity",
+      "description": "",
+      "name": "keycloak",
+      "oci": "ghcr.io/crmarques/gitups-packages/keycloak:0.0.1",
+      "role": "workload",
+      "version": "0.0.1"
+    },
+    {
+      "category": "network-lb",
+      "description": "",
+      "name": "metallb",
+      "oci": "ghcr.io/crmarques/gitups-packages/metallb:0.0.1",
+      "role": "workload",
+      "version": "0.0.1"
+    },
+    {
+      "category": "ingress",
+      "description": "",
+      "name": "nginx-ingress",
+      "oci": "ghcr.io/crmarques/gitups-packages/nginx-ingress:0.0.1",
+      "role": "workload",
+      "version": "0.0.1"
+    },
+    {
+      "category": "operator-lifecycle",
+      "description": "",
+      "name": "olm",
+      "oci": "ghcr.io/crmarques/gitups-packages/olm:0.0.1",
+      "role": "workload",
+      "version": "0.0.1"
+    },
+    {
+      "category": "mesh",
+      "description": "",
+      "name": "service-mesh",
+      "oci": "ghcr.io/crmarques/gitups-packages/service-mesh:0.0.1",
+      "role": "workload",
+      "version": "0.0.1"
+    },
+    {
+      "category": "secrets",
+      "description": "",
+      "name": "vault",
+      "oci": "ghcr.io/crmarques/gitups-packages/vault:0.0.1",
+      "role": "workload",
+      "version": "0.0.1"
+    }
+  ]
+}
