@@ -2,25 +2,20 @@ apiVersion: gitups/v1alpha1
 kind: PackageDefinition
 metadata:
   name: haproxy
-  version: 0.1.0
+  version: 0.2.0
 spec:
   role: workload
   category: ingress
   defaultInstall: helm
   defaultResources: []
-  # haproxy is a service-config consumer: it exposes the http-proxy
-  # interface so that any backend (gitea, keycloak, vault, …) can
-  # be routed through it via a `HttpProxyBackend` CR. The matching
-  # SRC (Declarest) reconciles these CRs into haproxy configuration
-  # at runtime. Gitups core projects one ResolvedPackage per
-  # Provision.spec.repositories[].interfaceResources[] entry into
-  # the service-resources repo whose serviceRef points at this
-  # instance, using the resources/<resourceTemplate>/ descriptor
-  # below for the rendered CR body.
-  implements:
-    - interface: http-proxy
-      version: v1alpha1
-      resourceTemplate: backend
+  # haproxy exposes a Data Plane API that declarest can reconcile via
+  # the `haproxy-dataplane-bundle` metadata bundle. Gitups does not
+  # fetch the bundle — it is resolved at runtime by declarest when the
+  # ManagedService's spec.metadata.bundle points here.
+  declarestBundle:
+    name: haproxy-dataplane-bundle
+    version: 0.1.0
+    ref: ghcr.io/crmarques/declarest-bundles/haproxy-dataplane-bundle:0.1.0
   compatibility:
     kubernetes:
       - ">=1.28"

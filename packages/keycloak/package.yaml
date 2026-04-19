@@ -2,7 +2,7 @@ apiVersion: gitups/v1alpha1
 kind: PackageDefinition
 metadata:
   name: keycloak
-  version: 0.0.1
+  version: 0.1.0
 spec:
   role: workload
   category: identity
@@ -10,3 +10,11 @@ spec:
   defaultResources:
     - template: config
       name: default
+  # Keycloak's Admin REST API is reconciled by declarest via the
+  # `keycloak-bundle` metadata bundle. Advisory only — gitups never
+  # fetches the bundle; declarest resolves it at runtime from
+  # ManagedService.spec.metadata.bundle.
+  declarestBundle:
+    name: keycloak-bundle
+    version: 1.0.0
+    ref: ghcr.io/crmarques/declarest-bundles/keycloak-bundle:1.0.0

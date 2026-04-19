@@ -2,7 +2,7 @@ apiVersion: gitups/v1alpha1
 kind: PackageDefinition
 metadata:
   name: vault
-  version: 0.0.1
+  version: 0.1.0
 spec:
   role: workload
   category: secrets
@@ -10,3 +10,18 @@ spec:
   defaultResources:
     - template: config
       name: default
+  # vault provides the `secret-store` capability. Consumers (typically
+  # declarest) consume it by composing vault's `secret-store` resource
+  # template — it emits a declarest SecretStore CR wired to this
+  # vault's in-cluster service. The provider side does not synthesise
+  # a separate resource today; consumption is through explicit
+  # resource selection rather than a binding.
+  provides:
+    - capability: secret-store
+      resourceTemplate: secret-store
+      exports:
+        - name: address
+          from: input:vault.service
+        - name: tokenSecretRef
+          from: placeholder
+          secret: true

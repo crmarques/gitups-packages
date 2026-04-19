@@ -1,0 +1,34 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: resource-repository
+spec:
+  renderer: raw
+  inputs:
+    - name: namespace
+      type: string
+      default: declarest-system
+    - name: pollInterval
+      type: string
+      default: 1m
+    - name: git.url
+      type: string
+      placeholder: true
+      placeholderReason: "Git repository URL declarest should watch (env output repo)"
+    - name: git.branch
+      type: string
+      default: main
+    - name: git.auth.tokenRef.name
+      type: string
+      default: repository-credentials
+    - name: git.auth.tokenRef.key
+      type: string
+      default: token
+    - name: storage.size
+      type: string
+      default: 1Gi
+    - name: storage.accessMode
+      type: string
+      default: ReadWriteOnce
+  dependsOn:
+    - declarest/install

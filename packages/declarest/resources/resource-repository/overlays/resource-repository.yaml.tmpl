@@ -1,0 +1,21 @@
+apiVersion: declarest.io/v1alpha1
+kind: ResourceRepository
+metadata:
+  name: {{ .ResourceName }}
+  namespace: {{ .Values.namespace }}
+spec:
+  type: git
+  pollInterval: {{ .Values.pollInterval }}
+  git:
+    url: {{ .Values.git.url }}
+    branch: {{ .Values.git.branch }}
+    auth:
+      tokenRef:
+        name: {{ .Values.git.auth.tokenRef.name }}
+        key: {{ .Values.git.auth.tokenRef.key }}
+  storage:
+    pvc:
+      accessModes:
+        - {{ .Values.storage.accessMode }}
+      requests:
+        storage: {{ .Values.storage.size }}

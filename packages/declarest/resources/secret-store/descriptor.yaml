@@ -1,0 +1,45 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: secret-store
+spec:
+  renderer: raw
+  # Renders a declarest SecretStore CR in either `vault` or `file`
+  # mode. Consumers composing a vault-backed SecretStore usually come
+  # here via vault's `secret-store` capability binding, which pre-fills
+  # address/tokenRef from the provider's running service. The `file`
+  # mode is supported for dev/test flows where no vault is available.
+  inputs:
+    - name: namespace
+      type: string
+      default: declarest-system
+    - name: kind
+      type: string
+      default: vault
+      enum: [vault, file]
+    - name: vault.address
+      type: string
+      default: ""
+    - name: vault.auth.token.secretRef.name
+      type: string
+      default: ""
+    - name: vault.auth.token.secretRef.key
+      type: string
+      default: token
+    - name: file.path
+      type: string
+      default: /var/lib/declarest/secrets/secrets.json
+    - name: file.passphrase.secretRef.name
+      type: string
+      default: ""
+    - name: file.passphrase.secretRef.key
+      type: string
+      default: passphrase
+    - name: storage.size
+      type: string
+      default: 1Gi
+    - name: storage.accessMode
+      type: string
+      default: ReadWriteOnce
+  dependsOn:
+    - declarest/install

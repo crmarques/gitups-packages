@@ -1,0 +1,39 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: sync-policy
+spec:
+  renderer: raw
+  inputs:
+    - name: namespace
+      type: string
+      default: declarest-system
+    - name: resourceRepositoryRef.name
+      type: string
+      required: true
+    - name: managedServiceRef.name
+      type: string
+      required: true
+    - name: secretStoreRef.name
+      type: string
+      required: true
+    - name: source.path
+      type: string
+      required: true
+    - name: source.recursive
+      type: bool
+      default: true
+    - name: sync.force
+      type: bool
+      default: false
+    - name: sync.prune
+      type: bool
+      default: false
+    - name: syncInterval
+      type: string
+      default: 5m
+    - name: suspend
+      type: bool
+      default: false
+  dependsOn:
+    - declarest/install

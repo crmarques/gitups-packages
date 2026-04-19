@@ -1,0 +1,17 @@
+apiVersion: declarest.io/v1alpha1
+kind: ManagedService
+metadata:
+  name: {{ .ResourceName }}
+  namespace: {{ .Values.namespace }}
+spec:
+  http:
+    baseURL: {{ .Values.http.baseURL }}
+    auth:
+      customHeaders:
+        - header: {{ .Values.http.auth.header }}
+          prefix: {{ .Values.http.auth.prefix }}
+          valueRef:
+            name: {{ .Values.http.auth.valueRef.name }}
+            key: {{ .Values.http.auth.valueRef.key }}
+  metadata:
+    bundle: {{ .Values.metadata.bundle }}

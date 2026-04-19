@@ -1,0 +1,20 @@
+apiVersion: declarest.io/v1alpha1
+kind: SyncPolicy
+metadata:
+  name: {{ .ResourceName }}
+  namespace: {{ .Values.namespace }}
+spec:
+  resourceRepositoryRef:
+    name: {{ .Values.resourceRepositoryRef.name }}
+  managedServiceRef:
+    name: {{ .Values.managedServiceRef.name }}
+  secretStoreRef:
+    name: {{ .Values.secretStoreRef.name }}
+  source:
+    path: {{ .Values.source.path }}
+    recursive: {{ .Values.source.recursive }}
+  sync:
+    force: {{ .Values.sync.force }}
+    prune: {{ .Values.sync.prune }}
+  syncInterval: {{ .Values.syncInterval }}
+  suspend: {{ .Values.suspend }}

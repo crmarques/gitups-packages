@@ -1,0 +1,12 @@
+auth:
+  adminUser: {{ .Values.auth.adminUser }}
+  adminPassword: {{ .Values.auth.adminPassword }}
+service:
+  type: {{ .Values.service.type }}
+ingress:
+  enabled: {{ .Values.ingress.enabled }}
+  ingressClassName: {{ .Values.ingress.ingressClassName }}
+  hostname: {{ .Values.ingress.hostname }}
+  tls: {{ .Values.ingress.tls }}
+production: {{ .Values.production }}
+proxy: {{ .Values.proxy }}

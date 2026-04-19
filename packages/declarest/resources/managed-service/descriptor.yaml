@@ -1,0 +1,33 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: managed-service
+spec:
+  renderer: raw
+  inputs:
+    - name: namespace
+      type: string
+      default: declarest-system
+    - name: http.baseURL
+      type: string
+      placeholder: true
+      placeholderReason: "Target REST API base URL (e.g. https://keycloak.keycloak.svc.cluster.local:8443)"
+    - name: http.auth.header
+      type: string
+      default: Authorization
+    - name: http.auth.prefix
+      type: string
+      default: Bearer
+    - name: http.auth.valueRef.name
+      type: string
+      placeholder: true
+      placeholderReason: "Name of the K8s Secret holding the API token"
+    - name: http.auth.valueRef.key
+      type: string
+      default: token
+    - name: metadata.bundle
+      type: string
+      placeholder: true
+      placeholderReason: "Declarest metadata-bundle shorthand (<name>:<version>), e.g. keycloak-bundle:1.0.0"
+  dependsOn:
+    - declarest/install

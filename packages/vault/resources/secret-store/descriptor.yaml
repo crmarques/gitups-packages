@@ -1,0 +1,36 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: secret-store
+spec:
+  renderer: raw
+  # Emits a declarest SecretStore CR in vault mode, pre-filled with
+  # this vault instance's in-cluster service address. Pair this
+  # resource with declarest's `sync-policy` resource by matching
+  # `secretStoreRef.name` in the SyncPolicy.
+  inputs:
+    - name: namespace
+      type: string
+      default: declarest-system
+    - name: vault.service
+      type: string
+      default: vault
+    - name: vault.namespace
+      type: string
+      default: vault
+    - name: vault.port
+      type: int
+      default: 8200
+    - name: vault.scheme
+      type: string
+      default: http
+      enum: [http, https]
+    - name: tokenSecretRef.name
+      type: string
+      placeholder: true
+      placeholderReason: "Name of the K8s Secret holding the vault token declarest should authenticate with"
+    - name: tokenSecretRef.key
+      type: string
+      default: token
+  dependsOn:
+    - vault/install

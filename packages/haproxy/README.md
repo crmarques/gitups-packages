@@ -1,8 +1,9 @@
 # haproxy
 
 HAProxy Kubernetes Ingress Controller, installed via the upstream
-`haproxytech/kubernetes-ingress` Helm chart, plus an `http-proxy`
-service-config interface consumers can bind to.
+`haproxytech/kubernetes-ingress` Helm chart. Exposes a Data Plane API
+that declarest can reconcile through the `haproxy-dataplane-bundle`
+metadata bundle.
 
 ## Install
 
@@ -11,82 +12,55 @@ at the pinned chart version, so per the renderer priority (OLM →
 Kustomize → Helm → raw) this package defaults to Helm.
 
 The chart's `controller.defaultTLSSecret.enabled: false` is pinned in
-the values template because leaving it on generates a fresh self-signed
-cert on every render, violating gitups's determinism invariant.
+the values template because leaving it on generates a fresh
+self-signed cert on every render, violating gitups's determinism
+invariant.
 
-## Service config: http-proxy/v1alpha1
-
-haproxy declares `spec.implements`:
-
-```yaml
-implements:
-  - interface: http-proxy
-    version: v1alpha1
-    resourceTemplate: backend
-```
-
-This tells gitups: any Provision.spec.repositories[].interfaceResources[]
-entry pointing at `http-proxy/v1alpha1` and targeting this haproxy
-instance should be rendered using `resources/backend/`. Gitups core
-synthesises one ResolvedPackage per entry in the matching
-service-resources repo, tagged with the selected SRC (Declarest) as
-its controller, and Declarest reconciles the CRs into live haproxy
-configuration at runtime.
-
-### Using it
-
-Declare a service-resources repo targeting this haproxy instance:
+## Declarest integration
 
 ```yaml
-- name: services-haproxy-{{.Env}}
-  type: service-resources
-  serviceRef:
-    repo: support-services
-    instance: haproxy
-  interfaceResources:
-    - name: gitea
-      interface: http-proxy
-      version: v1alpha1
-      consumer:
-        repo: support-services
-        instance: gitea
-      values:
-        serviceName: gitea-http
-        serviceNamespace: gitea
-        servicePort: 3000
-        host: gitea.dsv.local
-    - name: keycloak
-      interface: http-proxy
-      version: v1alpha1
-      consumer:
-        repo: support-services
-        instance: keycloak
-      values:
-        serviceName: keycloak-service
-        serviceNamespace: keycloak
-        servicePort: 8080
-        host: keycloak.dsv.local
+spec:
+  declarestBundle:
+    name: haproxy-dataplane-bundle
+    version: 0.1.0
+    ref: ghcr.io/crmarques/declarest-bundles/haproxy-dataplane-bundle:0.1.0
 ```
 
-`gitups expand` emits two `HttpProxyBackend` CRs (one per entry) into
-the `services-haproxy-dsv` repo. At apply time the SRC routes them
-through `declarest apply`, which converts them into HAProxy backend
-definitions and reloads the data-plane.
+The bundle declares how logical paths (e.g. `/backends/keycloak`,
+`/frontends/http`) map to the HAProxy Data Plane API. Gitups never
+fetches the bundle; declarest resolves it at runtime when a
+`ManagedService` references `haproxy-dataplane-bundle:0.1.0` via
+`spec.metadata.bundle`.
+
+Typical wiring in a consumer env repo:
+
+```yaml
+- template: local/declarest
+  installMethod: olm
+  resources:
+    - template: managed-service
+      name: haproxy
+      values:
+        http.baseURL: http://haproxy-kubernetes-ingress.haproxy.svc:5555
+        http.auth.valueRef.name: haproxy-dataplane-token
+        metadata.bundle: haproxy-dataplane-bundle:0.1.0
+    - template: sync-policy
+      name: haproxy-backends
+      values:
+        resourceRepositoryRef.name: env-repo
+        managedServiceRef.name: haproxy
+        secretStoreRef.name: vault
+        source.path: /backends
+```
+
+Resource payloads (backend/frontend JSON) are authored (or generated
+by a bundle author tool) under the env repo at `/backends/<name>/resource.json`.
+
+See [gitups/agents/references/declarest.md](../../../gitups/agents/references/declarest.md)
+for the full declarest integration model.
 
 ## Compatibility
 
 Declared `kubernetes: [">=1.28"]`. Gitups's apply-time compatibility
 probe compares this against the target cluster's server version and
 warns (non-blocking) when the cluster is outside the declared range.
-
-## Inputs (backend template)
-
-| Input               | Type  | Default | Notes                                      |
-|---------------------|-------|---------|--------------------------------------------|
-| `serviceName`       | str   | —       | Target Service name                        |
-| `serviceNamespace`  | str   | —       | Target Service namespace                   |
-| `servicePort`       | int   | —       | Target Service port (integer)              |
-| `host`              | str   | —       | HTTP Host header to match on the frontend  |
-| `path`              | str   | `/`     | Path prefix                                |
-| `tls.enabled`       | bool  | `false` | Terminate TLS on the frontend              |
-| `tls.secretName`    | str   | `""`    | K8s Secret name with cert/key (TLS only)   |

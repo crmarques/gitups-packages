@@ -1,0 +1,53 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: helm
+spec:
+  renderer: helm
+  inputs:
+    - name: namespace
+      type: string
+      default: keycloak
+    - name: chart.version
+      type: string
+      default: 24.4.3
+    - name: appVersion
+      type: string
+      default: 26.0.7
+    - name: service.type
+      type: string
+      default: ClusterIP
+      enum: [ClusterIP, LoadBalancer, NodePort]
+    - name: ingress.enabled
+      type: bool
+      default: false
+    - name: ingress.ingressClassName
+      type: string
+      default: nginx
+    - name: ingress.hostname
+      type: string
+      placeholder: true
+      placeholderReason: "Public hostname for the Keycloak Ingress; only consumed when ingress.enabled=true"
+    - name: ingress.tls
+      type: bool
+      default: false
+    - name: auth.adminUser
+      type: string
+      default: admin
+    - name: auth.adminPassword
+      type: string
+      sensitive: true
+      placeholder: true
+      placeholderReason: "Initial Keycloak admin password seeded into the bitnami chart"
+    - name: production
+      type: bool
+      default: false
+    - name: proxy
+      type: string
+      default: edge
+      enum: [none, edge, reencrypt, passthrough]
+  helm:
+    repo: https://charts.bitnami.com/bitnami
+    chart: keycloak
+    version: 24.4.3
+    valuesTemplate: values.yaml.tmpl
