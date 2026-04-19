@@ -1,0 +1,28 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: helm
+spec:
+  renderer: helm
+  inputs:
+    - name: namespace
+      type: string
+      default: haproxy
+    - name: chart.version
+      type: string
+      default: 1.49.0
+    - name: controller.service.type
+      type: string
+      default: ClusterIP
+      enum: [ClusterIP, LoadBalancer, NodePort]
+    - name: controller.ingressClassResource.name
+      type: string
+      default: haproxy
+    - name: controller.ingressClassResource.default
+      type: bool
+      default: false
+  helm:
+    repo: https://haproxytech.github.io/helm-charts
+    chart: kubernetes-ingress
+    version: 1.49.0
+    valuesTemplate: values.yaml.tmpl

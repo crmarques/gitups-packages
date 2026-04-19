@@ -1,0 +1,26 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDefinition
+metadata:
+  name: haproxy
+  version: 0.1.0
+spec:
+  role: workload
+  category: ingress
+  defaultInstall: helm
+  defaultResources: []
+  # haproxy is a service-config consumer: it exposes the http-proxy
+  # interface so that any backend (gitea, keycloak, vault, …) can
+  # be routed through it via a `HttpProxyBackend` CR. The matching
+  # SRC (Declarest) reconciles these CRs into haproxy configuration
+  # at runtime. Gitups core projects one ResolvedPackage per
+  # Provision.spec.repositories[].interfaceResources[] entry into
+  # the service-resources repo whose serviceRef points at this
+  # instance, using the resources/<resourceTemplate>/ descriptor
+  # below for the rendered CR body.
+  implements:
+    - interface: http-proxy
+      version: v1alpha1
+      resourceTemplate: backend
+  compatibility:
+    kubernetes:
+      - ">=1.28"

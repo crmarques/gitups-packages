@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gitups.io/schemas/package.schema.json",
+  "title": "Gitups PackageDefinition",
+  "description": "Manifest for a single package in the gitups-packages monorepo. Each package lives in packages/<name>/ and is released independently via pkg/<name>/v<version> tags.",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "const": "gitups/v1alpha1"
+    },
+    "kind": {
+      "type": "string",
+      "const": "PackageDefinition"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$",
+          "minLength": 2,
+          "maxLength": 63,
+          "description": "Package name. Must match the directory name under packages/ and be DNS-1123-safe."
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$",
+          "description": "Semantic version without a leading 'v'. Release tag pkg/<name>/v<version> must match exactly."
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "deprecated": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reason"],
+          "properties": {
+            "reason": { "type": "string" },
+            "replacedBy": { "type": "string" },
+            "since": { "type": "string" }
+          }
+        }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "required": ["role"],
+      "additionalProperties": true,
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "workload",
+            "kubernetes-resource-controller",
+            "service-resource-controller"
+          ]
+        },
+        "category": { "type": "string" },
+        "defaultInstall": { "type": "string" },
+        "defaultResources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["template", "name"],
+            "additionalProperties": true,
+            "properties": {
+              "template": { "type": "string" },
+              "name": { "type": "string" }
+            }
+          }
+        },
+        "readiness": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "requires": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "provides": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "implements": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "bundles": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "cli": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "compatibility": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "kubernetes": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "gitupsMinVersion": { "type": "string" }
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "Optional list of other packages this package depends on at publish/consume time.",
+          "items": {
+            "type": "object",
+            "required": ["name", "version"],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$"
+              },
+              "version": {
+                "type": "string",
+                "description": "Version constraint. Exact pins preferred; SemVer ranges allowed."
+              }
+            }
+          }
+        },
+        "package": {
+          "type": "object",
+          "description": "Optional packaging overrides. When omitted, tools/package-build.sh uses its default include list.",
+          "additionalProperties": false,
+          "properties": {
+            "include": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Glob patterns (relative to package dir) to include in the tarball. When set, replaces the default include list."
+            },
+            "exclude": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Glob patterns to exclude. Applied after include."
+            },
+            "includeTests": {
+              "type": "boolean",
+              "default": false,
+              "description": "When true and no explicit include is set, tests/** is added to the default include list."
+            }
+          }
+        }
+      }
+    }
+  }
+}

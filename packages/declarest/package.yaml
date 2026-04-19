@@ -1,0 +1,49 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDefinition
+metadata:
+  name: declarest
+  version: 0.1.0
+spec:
+  role: service-resource-controller
+  category: gitops-controller
+  # Both `raw` (in-tree manifest bundle pinned to ghcr.io/crmarques/declarest)
+  # and `olm` (declarest-operator via operatorhubio-catalog) install methods
+  # are available. Keep `raw` as the default until the OLM catalog entry is
+  # verified for the target environment; Provisions opt into OLM explicitly
+  # with `installMethod: olm`.
+  defaultInstall: raw
+  defaultResources:
+    - template: config
+      name: default
+  cli:
+    binary: declarest
+    args:
+      - apply
+      - --context={{.KubeContext}}
+      - --file={{.ManifestPath}}
+  readiness:
+    - kind: Deployment
+      namespace: declarest
+      name: declarest
+      condition: Available
+  requires:
+    - capability: git-provider
+      resourceTemplate: repo-secret
+      consumes:
+        - input: repoURL
+          from: provider.url
+        - input: repoUsername
+          from: provider.username
+        - input: repoPassword
+          from: provider.token
+  # Declarest can reconcile interface-shaped CRs synthesised by gitups
+  # core. Each bundle declared here must match at least one provider's
+  # spec.implements[] entry at resolve time; otherwise the projected
+  # CR has no runtime handler and gitups refuses to expand.
+  bundles:
+    - interface: http-proxy
+      version: v1alpha1
+      source: "ghcr.io/crmarques/declarest-bundles:http-proxy-v0.1.0"
+  compatibility:
+    kubernetes:
+      - ">=1.28"

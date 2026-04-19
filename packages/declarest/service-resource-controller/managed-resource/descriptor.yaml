@@ -1,0 +1,14 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: managed-resource
+spec:
+  renderer: raw
+  # managed-resource is the SRC intent gitups uses to pass interface
+  # CRs (e.g. HttpProxyBackend from haproxy's http-proxy/v1alpha1)
+  # through to Declarest for reconciliation. Declarest treats the
+  # manifest directory as an opaque set of YAMLs; gitups just needs
+  # the intent directory to exist so `apply` can declare the route.
+  inputs: []
+  dependsOn:
+    - declarest/install

@@ -1,0 +1,26 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: lb-binding
+spec:
+  renderer: raw
+  inputs:
+    - name: namespace
+      type: string
+      default: ingress-nginx
+    - name: serviceName
+      type: string
+      default: ingress-nginx-controller
+    - name: poolName
+      type: string
+      required: true
+    - name: cidrs
+      type: list
+      required: true
+  dependsOn:
+    - nginx-ingress/install
+  readiness:
+    - kind: Deployment
+      namespace: '{{ .Values.namespace }}'
+      name: '{{ .Values.serviceName }}'
+      condition: Available

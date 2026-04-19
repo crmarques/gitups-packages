@@ -1,0 +1,25 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: managed-repo
+spec:
+  renderer: raw
+  inputs:
+    - name: namespace
+      type: string
+      default: argocd
+    - name: repoURL
+      type: string
+      placeholder: true
+      placeholderReason: "git URL for the managed output repo (set per env)"
+    - name: path
+      type: string
+      default: "."
+    - name: targetRevision
+      type: string
+      default: HEAD
+    - name: destinationNamespace
+      type: string
+      default: argocd
+  dependsOn:
+    - argocd/resources/instance

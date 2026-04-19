@@ -1,0 +1,24 @@
+apiVersion: gitups.io/v1alpha1
+kind: HttpProxyBackend
+metadata:
+  name: {{ .ResourceName }}
+  namespace: {{ .Values.serviceNamespace }}
+  labels:
+    gitups.io/interface: http-proxy
+    gitups.io/interface-version: v1alpha1
+spec:
+  provider:
+    instance: {{ .PackageInstance }}
+  frontend:
+    host: {{ .Values.host }}
+    path: {{ .Values.path }}
+    tls:
+      enabled: {{ .Values.tls.enabled }}
+{{- if .Values.tls.enabled }}
+      secretName: {{ .Values.tls.secretName }}
+{{- end }}
+  backend:
+    service:
+      name: {{ .Values.serviceName }}
+      namespace: {{ .Values.serviceNamespace }}
+      port: {{ .Values.servicePort }}

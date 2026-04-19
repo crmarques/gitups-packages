@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Instance }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    gitups.io/binding: lb-ip-pool
+data:
+  serviceName: {{ .Values.serviceName }}
+  poolName: {{ .Values.poolName }}
+  cidrs: |
+{{- range .Values.cidrs }}
+    - {{ . }}
+{{- end }}

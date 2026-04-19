@@ -1,0 +1,27 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: managed-script
+spec:
+  renderer: raw
+  # Inputs are populated by the gitups resolver from the original
+  # script-style resource descriptor and its ResolvedValues. Package
+  # authors do not set these directly.
+  inputs:
+    - name: namespace
+      type: string
+      required: true
+    - name: scriptImage
+      type: string
+      required: true
+    - name: scriptServiceAccount
+      type: string
+      default: default
+    - name: scripts
+      type: object
+      required: true
+    - name: valuesJSON
+      type: string
+      required: true
+  dependsOn:
+    - declarest/install

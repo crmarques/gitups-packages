@@ -1,0 +1,24 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: helm
+spec:
+  renderer: helm
+  inputs:
+    - name: namespace
+      type: string
+      default: argocd
+    - name: chart.version
+      type: string
+      default: 9.5.2
+    - name: appVersion
+      type: string
+      default: v3.3.7
+    - name: server.ingress.enabled
+      type: bool
+      default: false
+  helm:
+    repo: https://argoproj.github.io/argo-helm
+    chart: argo-cd
+    version: 9.5.2
+    valuesTemplate: values.yaml.tmpl

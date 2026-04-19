@@ -1,0 +1,152 @@
+name: Release package
+
+on:
+  push:
+    tags:
+      - "pkg/*/v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (pkg/<name>/v<version>)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and publish from tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install Python deps
+        run: python3 -m pip install --quiet pyyaml jsonschema
+
+      - name: Parse tag
+        id: tag
+        env:
+          RAW_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: tools/parse-tag.sh --tag "${RAW_TAG}" --output github
+
+      - name: Validate package
+        run: tools/validate-package.sh --tag "${{ github.event.inputs.tag || github.ref_name }}"
+
+      - name: Run package tests (if any)
+        run: |
+          set -euo pipefail
+          test_script="packages/${{ steps.tag.outputs.name }}/tests/run.sh"
+          if [[ -x "${test_script}" ]]; then
+            "${test_script}"
+          else
+            echo "packages/${{ steps.tag.outputs.name }}: no tests/run.sh — skipping"
+          fi
+
+      - name: Build tarball
+        id: build
+        run: |
+          archive=$(tools/package-build.sh "${{ steps.tag.outputs.name }}")
+          echo "archive=${archive}" >> "${GITHUB_OUTPUT}"
+          echo "sha256=$(awk '{print $1}' "${archive}.sha256")" >> "${GITHUB_OUTPUT}"
+
+      - name: Generate SBOM (syft)
+        id: sbom
+        continue-on-error: true
+        uses: anchore/sbom-action@v0
+        with:
+          path: packages/${{ steps.tag.outputs.name }}
+          format: spdx-json
+          output-file: dist/${{ steps.tag.outputs.name }}-${{ steps.tag.outputs.version }}.sbom.spdx.json
+          upload-artifact: false
+
+      - name: Set up ORAS
+        uses: oras-project/setup-oras@v1
+
+      - name: Log in to GHCR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${GITHUB_TOKEN}" | oras login ghcr.io \
+            --username "${GITHUB_ACTOR}" \
+            --password-stdin
+
+      - name: Publish OCI artifact
+        id: publish
+        env:
+          GHCR_OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          owner_lower="$(printf '%s' "${GHCR_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          ref=$(tools/package-publish.sh \
+            "${{ steps.tag.outputs.name }}" \
+            --archive "${{ steps.build.outputs.archive }}" \
+            --owner "${owner_lower}")
+          echo "ref=${ref}" >> "${GITHUB_OUTPUT}"
+
+      - name: Generate provenance attestation
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ${{ steps.build.outputs.archive }}
+
+      - name: Update index.json
+        env:
+          GHCR_OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          owner_lower="$(printf '%s' "${GHCR_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          record=$(mktemp)
+          # publish step outputs "<ref>@<digest>"
+          printf '%s %s %s\n' \
+            "${{ steps.tag.outputs.name }}" \
+            "${{ steps.tag.outputs.version }}" \
+            "${{ steps.publish.outputs.ref }}" > "${record}"
+          tools/generate-index.sh --owner "${owner_lower}" --publish-record "${record}"
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ steps.tag.outputs.name }}-${{ steps.tag.outputs.version }}
+          path: |
+            dist/${{ steps.tag.outputs.name }}-${{ steps.tag.outputs.version }}.tgz
+            dist/${{ steps.tag.outputs.name }}-${{ steps.tag.outputs.version }}.tgz.sha256
+            dist/${{ steps.tag.outputs.name }}-${{ steps.tag.outputs.version }}.sbom.spdx.json
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: ${{ steps.tag.outputs.name }} v${{ steps.tag.outputs.version }}
+          body: |
+            **Package:** `${{ steps.tag.outputs.name }}`
+            **Version:** `${{ steps.tag.outputs.version }}`
+
+            **OCI artifact:**
+            ```
+            ${{ steps.publish.outputs.ref }}
+            ```
+
+            **SHA256:** `${{ steps.build.outputs.sha256 }}`
+
+            Pull with ORAS:
+            ```
+            oras pull ${{ steps.publish.outputs.ref }}
+            ```
+          files: |
+            dist/${{ steps.tag.outputs.name }}-${{ steps.tag.outputs.version }}.tgz
+            dist/${{ steps.tag.outputs.name }}-${{ steps.tag.outputs.version }}.tgz.sha256
+            dist/${{ steps.tag.outputs.name }}-${{ steps.tag.outputs.version }}.sbom.spdx.json
+          fail_on_unmatched_files: false

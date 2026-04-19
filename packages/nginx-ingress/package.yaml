@@ -1,0 +1,18 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDefinition
+metadata:
+  name: nginx-ingress
+  version: 0.0.1
+spec:
+  role: workload
+  category: ingress
+  defaultInstall: helm
+  defaultResources: []
+  requires:
+    - capability: lb-ip-pool
+      resourceTemplate: lb-binding
+      consumes:
+        - input: poolName
+          from: provider.poolName
+        - input: cidrs
+          from: provider.cidrs

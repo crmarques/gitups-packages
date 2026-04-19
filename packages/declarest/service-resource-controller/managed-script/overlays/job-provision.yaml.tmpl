@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Instance }}-provision
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/managed-by: gitups
+    app.kubernetes.io/component: script-provisioner
+    app.kubernetes.io/instance: {{ .Instance }}
+spec:
+  backoffLimit: 4
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/managed-by: gitups
+        app.kubernetes.io/component: script-provisioner
+        app.kubernetes.io/instance: {{ .Instance }}
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ .Values.scriptServiceAccount }}
+      containers:
+        - name: provision
+          image: {{ .Values.scriptImage }}
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - "set -eu && cp /opt/gitups/scripts/provision.sh /tmp/provision.sh && chmod +x /tmp/provision.sh && /tmp/provision.sh"
+          env:
+            - name: GITUPS_VALUES_FILE
+              value: /etc/gitups/values.json
+            - name: GITUPS_INSTANCE
+              value: {{ .Instance }}
+            - name: GITUPS_NAMESPACE
+              value: {{ .Values.namespace }}
+          volumeMounts:
+            - name: scripts
+              mountPath: /opt/gitups/scripts
+              readOnly: true
+            - name: values
+              mountPath: /etc/gitups
+              readOnly: true
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ .Instance }}-scripts
+            defaultMode: 365
+        - name: values
+          configMap:
+            name: {{ .Instance }}-values

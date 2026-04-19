@@ -1,0 +1,103 @@
+name: Validate packages
+
+on:
+  pull_request:
+    paths:
+      - "packages/**"
+      - "schemas/**"
+      - "tools/**"
+      - ".github/workflows/pr-validate-packages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    name: Detect changed packages
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.detect.outputs.packages }}
+      count: ${{ steps.detect.outputs.count }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed packages
+        id: detect
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          mapfile -t pkgs < <(tools/detect-changed-packages.sh "${BASE_SHA}" "${HEAD_SHA}")
+          printf 'detected %d changed packages:\n' "${#pkgs[@]}"
+          printf '  %s\n' "${pkgs[@]:-<none>}"
+          # Emit a JSON array for matrix fan-out.
+          if [[ ${#pkgs[@]} -eq 0 ]]; then
+            echo 'packages=[]' >> "${GITHUB_OUTPUT}"
+            echo 'count=0' >> "${GITHUB_OUTPUT}"
+          else
+            json=$(printf '%s\n' "${pkgs[@]}" | python3 -c 'import json,sys; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))')
+            echo "packages=${json}" >> "${GITHUB_OUTPUT}"
+            echo "count=${#pkgs[@]}" >> "${GITHUB_OUTPUT}"
+          fi
+
+  validate:
+    name: Validate ${{ matrix.package }}
+    needs: detect
+    if: needs.detect.outputs.count != '0'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJson(needs.detect.outputs.packages) }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Python deps
+        run: |
+          python3 -m pip install --quiet pyyaml jsonschema
+
+      - name: Schema + consistency validation
+        run: tools/validate-package.sh "${{ matrix.package }}"
+
+      - name: Build tarball (dry run)
+        run: tools/package-build.sh "${{ matrix.package }}"
+
+      - name: Run package tests (if any)
+        run: |
+          set -euo pipefail
+          test_script="packages/${{ matrix.package }}/tests/run.sh"
+          if [[ -x "${test_script}" ]]; then
+            "${test_script}"
+          else
+            echo "packages/${{ matrix.package }}: no tests/run.sh — skipping"
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-${{ matrix.package }}
+          path: dist/${{ matrix.package }}-*.tgz*
+          if-no-files-found: error
+          retention-days: 7
+
+  summary:
+    name: Validation summary
+    needs: [detect, validate]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report
+        run: |
+          echo "Changed packages: ${{ needs.detect.outputs.count }}"
+          echo "Validate result:  ${{ needs.validate.result }}"
+          if [[ "${{ needs.validate.result }}" == "failure" ]]; then
+            exit 1
+          fi

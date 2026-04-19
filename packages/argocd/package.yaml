@@ -1,0 +1,27 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDefinition
+metadata:
+  name: argocd
+  version: 0.0.1
+spec:
+  role: kubernetes-resource-controller
+  category: gitops-controller
+  defaultInstall: olm
+  defaultResources:
+    - template: instance
+      name: default
+  readiness:
+    - kind: Deployment
+      namespace: argocd
+      name: argocd-server
+      condition: Available
+  requires:
+    - capability: git-provider
+      resourceTemplate: repo-secret
+      consumes:
+        - input: repoURL
+          from: provider.url
+        - input: repoUsername
+          from: provider.username
+        - input: repoPassword
+          from: provider.token

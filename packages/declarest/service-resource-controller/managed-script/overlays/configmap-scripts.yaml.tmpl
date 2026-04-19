@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Instance }}-scripts
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/managed-by: gitups
+    app.kubernetes.io/component: script-provisioner
+    app.kubernetes.io/instance: {{ .Instance }}
+data:
+{{- range $name, $body := .Values.scripts }}
+  {{ $name }}: |
+{{ indent 4 $body }}
+{{- end }}

@@ -1,0 +1,18 @@
+apiVersion: gitups/v1alpha1
+kind: PackageDescriptor
+metadata:
+  name: pool
+spec:
+  renderer: raw
+  inputs:
+    - name: namespace
+      type: string
+      default: metallb-system
+    - name: poolName
+      type: string
+      required: true
+    - name: cidrs
+      type: list
+      required: true
+  dependsOn:
+    - metallb/install
