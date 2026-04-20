@@ -15,10 +15,26 @@ spec:
   defaultResources: []
   cli:
     binary: declarest
+    # Default (CLI-only) invocation used by gitups for SRC intents
+    # where the CLI both applies the manifest and drives
+    # reconciliation (e.g. the managed-script intent).
     args:
       - apply
       - --context={{.KubeContext}}
       - --file={{.ManifestPath}}
+    # Per-intent bootstrap-sync invocations. Gitups kubectl-applies
+    # the rendered CR first (so the in-cluster operator can take
+    # over on steady state) and then runs the binary with these
+    # args to drive one immediate reconciliation — so service
+    # resources converge without waiting for the operator to become
+    # Ready on a fresh cluster.
+    intents:
+      sync-policy:
+        args:
+          - resource
+          - apply
+          - --kube-context={{.KubeContext}}
+          - --sync-policy={{.ManifestPath}}/sync-policy.yaml
   readiness:
     - kind: Deployment
       namespace: declarest
