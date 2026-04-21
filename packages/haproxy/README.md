@@ -2,8 +2,8 @@
 
 HAProxy Kubernetes Ingress Controller, installed via the upstream
 `haproxytech/kubernetes-ingress` Helm chart. Exposes a Data Plane API
-that declarest can reconcile through the `haproxy-dataplane-bundle`
-metadata bundle.
+that declarest can reconcile through the `haproxy` metadata bundle
+([declarest-metadata-bundles/bundles/haproxy](https://github.com/crmarques/declarest-metadata-bundles/tree/main/bundles/haproxy)).
 
 ## Install
 
@@ -21,15 +21,15 @@ invariant.
 ```yaml
 spec:
   declarestBundle:
-    name: haproxy-dataplane-bundle
-    version: 0.1.0
-    ref: ghcr.io/crmarques/declarest-bundles/haproxy-dataplane-bundle:0.1.0
+    name: haproxy
+    version: 0.0.1
+    ref: ghcr.io/crmarques/declarest-metadata-bundles/haproxy:0.0.1
 ```
 
 The bundle declares how logical paths (e.g. `/backends/keycloak`,
 `/frontends/http`) map to the HAProxy Data Plane API. Gitups never
 fetches the bundle; declarest resolves it at runtime when a
-`ManagedService` references `haproxy-dataplane-bundle:0.1.0` via
+`ManagedService` references `haproxy:0.0.1` via
 `spec.metadata.bundle`.
 
 Typical wiring in a consumer env repo:
@@ -43,7 +43,7 @@ Typical wiring in a consumer env repo:
       values:
         http.baseURL: http://haproxy-kubernetes-ingress.haproxy.svc:5555
         http.auth.valueRef.name: haproxy-dataplane-token
-        metadata.bundle: haproxy-dataplane-bundle:0.1.0
+        metadata.bundle: haproxy:0.0.1
     - template: sync-policy
       name: haproxy-backends
       values:

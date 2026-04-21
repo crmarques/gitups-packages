@@ -9,13 +9,14 @@ spec:
   defaultInstall: helm
   defaultResources: []
   # haproxy exposes a Data Plane API that declarest can reconcile via
-  # the `haproxy-dataplane-bundle` metadata bundle. Gitups does not
-  # fetch the bundle — it is resolved at runtime by declarest when the
-  # ManagedService's spec.metadata.bundle points here.
+  # the `haproxy` metadata bundle (published at
+  # github.com/crmarques/declarest-metadata-bundles/bundles/haproxy).
+  # Gitups never fetches the bundle — declarest resolves it at
+  # runtime when a ManagedService's spec.metadata.bundle points here.
   declarestBundle:
-    name: haproxy-dataplane-bundle
-    version: 0.1.0
-    ref: ghcr.io/crmarques/declarest-bundles/haproxy-dataplane-bundle:0.1.0
+    name: haproxy
+    version: 0.0.1
+    ref: ghcr.io/crmarques/declarest-metadata-bundles/haproxy:0.0.1
   compatibility:
     kubernetes:
       - ">=1.28"

@@ -37,4 +37,4 @@ spec:
       default: quay.io/operatorhubio/catalog
     - name: catalog.image.digest
       type: string
-      default: 9fbfd70da2cedae8754fb8ed1b4d9c55733b5a7e06685d34aa415063cd964743
+      default: ad461121b20611bddf98bfa041ca8eeb9f1a28c8c2da8d7c7f3558a4fc68ee9a

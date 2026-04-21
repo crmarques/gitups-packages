@@ -25,3 +25,89 @@ spec:
           from: provider.username
         - input: repoPassword
           from: provider.token
+  # KRC bootstrap-apply declaration. Gitups core carries no hardcoded
+  # cluster binary — it reads `binary` and renders each intent's
+  # `args` template to run every cluster operation it needs during
+  # bootstrap. Any KRC that wants to own the apply phase must declare
+  # every intent gitups uses (see api/v1alpha1/types.go IntentApply,
+  # IntentGetJSON, IntentWaitCondition, …).
+  cli:
+    binary: kubectl
+    intents:
+      apply:
+        args:
+          - "--context={{.KubeContext}}"
+          - "apply"
+          - "-k"
+          - "{{.ManifestPath}}"
+          - "--server-side"
+          - "--force-conflicts"
+      apply-dry-run:
+        args:
+          - "--context={{.KubeContext}}"
+          - "apply"
+          - "-k"
+          - "{{.ManifestPath}}"
+          - "--server-side"
+          - "--force-conflicts"
+          - "--dry-run=server"
+      get-json:
+        args:
+          - "--context={{.KubeContext}}"
+          - "-n"
+          - "{{.Namespace}}"
+          - "get"
+          - "{{.Kind}}"
+          - "{{.Name}}"
+          - "-o"
+          - "json"
+      wait-condition:
+        args:
+          - "--context={{.KubeContext}}"
+          - "-n"
+          - "{{.Namespace}}"
+          - "wait"
+          - "--for=condition={{.Condition}}"
+          - "{{.Kind}}/{{.Name}}"
+          - "--timeout={{.Timeout}}"
+      wait-crds-established:
+        args:
+          - "--context={{.KubeContext}}"
+          - "wait"
+          - "--for=condition=Established"
+          - "crd"
+          - "--all"
+          - "--timeout={{.Timeout}}"
+      list-crds:
+        args:
+          - "--context={{.KubeContext}}"
+          - "get"
+          - "crd"
+          - "-o"
+          - "name"
+      server-version:
+        args:
+          - "--context={{.KubeContext}}"
+          - "version"
+          - "-o"
+          - "json"
+      list-pods-jsonpath:
+        args:
+          - "--context={{.KubeContext}}"
+          - "-n"
+          - "{{.Namespace}}"
+          - "get"
+          - "pods"
+          - "-l"
+          - "{{.Selector}}"
+          - "-o"
+          - 'jsonpath={range .items[*]}{.metadata.name}{"|"}{.status.phase}{"\n"}{end}'
+      pod-logs:
+        args:
+          - "--context={{.KubeContext}}"
+          - "-n"
+          - "{{.Namespace}}"
+          - "logs"
+          - "{{.Pod}}"
+          - "--all-containers=true"
+          - "--tail=40"

@@ -10,6 +10,20 @@ spec:
   defaultResources:
     - template: config
       name: default
+  # Gitea exposes its Admin API (orgs/repos/users/permissions) to
+  # declarest via the `gitea` metadata bundle (published at
+  # github.com/crmarques/declarest-metadata-bundles/bundles/gitea).
+  # Gitups never fetches the bundle — declarest resolves it at
+  # runtime when a ManagedService's spec.metadata.bundle points here.
+  declarestBundle:
+    name: gitea
+    version: 0.0.1
+    ref: ghcr.io/crmarques/declarest-metadata-bundles/gitea:0.0.1
+  readiness:
+    - kind: Deployment
+      namespace: gitea
+      name: gitea
+      condition: Available
   provides:
     - capability: git-provider
       resourceTemplate: user

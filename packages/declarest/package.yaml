@@ -15,26 +15,29 @@ spec:
   defaultResources: []
   cli:
     binary: declarest
-    # Default (CLI-only) invocation used by gitups for SRC intents
-    # where the CLI both applies the manifest and drives
-    # reconciliation (e.g. the managed-script intent).
+    # Default (CLI-only) invocation template used by gitups when a
+    # resource unit has `Controller.Intent == "managed-script"`.
+    # `{{.Context}}` here is a **declarest context** (the named
+    # {repo, managed-service, secret-store} triple declared via
+    # `declarest context use`), **not** a kubectl context. Gitups
+    # currently populates it from CLIContext.Namespace as a
+    # placeholder convention; a cleaner wiring is deferred until the
+    # managed-script domain unit is rewritten against declarest CLI
+    # v0.3.x (`declarest resource apply /path`).
     args:
+      - resource
       - apply
-      - --context={{.KubeContext}}
-      - --file={{.ManifestPath}}
-    # Per-intent bootstrap-sync invocations. Gitups kubectl-applies
-    # the rendered CR first (so the in-cluster operator can take
-    # over on steady state) and then runs the binary with these
-    # args to drive one immediate reconciliation — so service
-    # resources converge without waiting for the operator to become
-    # Ready on a fresh cluster.
-    intents:
-      sync-policy:
-        args:
-          - resource
-          - apply
-          - --kube-context={{.KubeContext}}
-          - --sync-policy={{.ManifestPath}}/sync-policy.yaml
+      - --context={{.Namespace}}
+      - "{{.ManifestPath}}"
+    # spec.cli.intents intentionally empty. Bootstrap-sync intents
+    # (previously `sync-policy`) needed `--sync-policy=<manifest>`
+    # which declarest CLI v0.3.x dropped in favour of a
+    # context/repository model. Re-enable once the
+    # declarest-metadata-bundles repo ships the per-service contexts
+    # that drive the new flow. Without an intent here, gitups
+    # kubectl-applies SyncPolicy CRs and waits for the in-cluster
+    # declarest operator to reconcile them at steady state.
+    intents: {}
   readiness:
     - kind: Deployment
       namespace: declarest
